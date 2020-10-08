@@ -1,0 +1,49 @@
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: true
+  
+api:
+  dashboard: true
+  debug: false
+
+entryPoints:
+  http:
+    address: ":80"
+  https:
+    address: ":443"
+
+providers:
+  docker:
+    watch: true
+    swarmMode: false
+    useBindPortIP: true
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+      
+log:
+  filePath: "log/traefik.log"
+  level: WARN
+accessLog:
+  filePath: "log/access.log"
+  bufferingSize: 100
+
+#################################
+### Let's Encrypt
+#################################
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "vantt@miczone.asia"
+      storage: acme.json
+      httpChallenge:
+        entryPoint: http
+
+#################################
+### REDIRECT MIDDLEWARE
+#################################
+http:
+    middlewares:
+        force-https:
+            redirectScheme:
+                scheme: https
+                permanent: true
