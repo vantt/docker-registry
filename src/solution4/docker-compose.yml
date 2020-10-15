@@ -1,0 +1,125 @@
+version: '3.7'
+
+networks:
+    docker_registry:
+        driver: bridge
+    proxy:
+        external: true
+        name: https-proxy
+
+volumes:
+  registry-data: # the real name will be <parent-folder-name>_registry-data (dash '-' int he folder name will be removed). eg. authenticatedregistry_registry-data
+    driver: local
+  ui-data:
+    driver: local  
+
+services:
+  auth:
+    image: ${DOCKER_AUTH_IMAGE}
+    container_name: auth
+    ports:
+      - 5001:5001
+    volumes:
+      - ./config:/config:ro
+      - ./certs:/certs
+    restart: always
+    command: --v=2 --alsologtostderr /config/auth_config.yml
+    networks:
+      - docker_registry
+      - proxy  
+    labels:  
+        # https://docs.traefik.io/reference/dynamic-configuration/docker/
+        # https://docs.traefik.io/routing/providers/docker/
+        - traefik.enable=true # expose this container through traefik
+        - traefik.http.services.registryAuth.loadbalancer.server.port=5001
+
+        # http route, redirect to https
+        # - traefik.http.routers.registryAuth_http.entrypoints=http
+        # - traefik.http.routers.registryAuth_http.rule=Host(`registry-ui.dev.mz`)
+        # - traefik.http.routers.registryAuth_http.middlewares=force-https@file
+
+        # https route
+        - traefik.http.routers.registryAuth_https.entrypoints=https
+        - traefik.http.routers.registryAuth_https.rule=Host(`registry-auth.dev.mz`)
+        - traefik.http.routers.registryAuth_https.tls=true
+        - traefik.http.routers.registryAuth_https.service=registryAuth
+
+
+
+  registry:
+    image: ${REGISTRY_IMAGE}
+    container_name: registry
+    ports:
+      - 5000:5000
+    volumes:
+      - ./certs:/certs
+      - ./config/htpasswd:/htpasswd:ro
+      - registry-data:/var/lib/registry
+    restart: always
+    networks:
+      - docker_registry
+      - proxy
+    environment:
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry
+
+      # realm: basic-realm
+      # path: /path/to/htpasswd      
+      - REGISTRY_AUTH=htpasswd
+      - REGISTRY_AUTH_HTPASSWD_REALM=basic-realm # the authentication server URI
+      - REGISTRY_AUTH_HTPASSWD_PATH=/htpasswd
+      
+
+      # - REGISTRY_AUTH=token
+      # - REGISTRY_AUTH_TOKEN_REALM=https://registry-auth.dev.mz/auth # the authentication server URI
+      # - REGISTRY_AUTH_TOKEN_SERVICE="Docker Registr"
+      # - REGISTRY_AUTH_TOKEN_ISSUER="Docker Registry Auth Server" # Should be the same as token.issuer from authenticated-registry/config/auth_config.yml
+      # - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/certs/docker_auth.pem
+
+    labels:  
+        # https://docs.traefik.io/reference/dynamic-configuration/docker/
+        # https://docs.traefik.io/routing/providers/docker/
+        - traefik.enable=true # expose this container through traefik
+        - traefik.http.services.registry.loadbalancer.server.port=5000
+
+        # http route, redirect to https
+        # - traefik.http.routers.registry_http.entrypoints=http
+        # - traefik.http.routers.registry_http.rule=Host(`registry.dev.mz`)
+        # - traefik.http.routers.registry_http.middlewares=force-https@file
+
+        # https route
+        - traefik.http.routers.registry_https.entrypoints=https
+        - traefik.http.routers.registry_https.rule=Host(`registry.dev.mz`)
+        - traefik.http.routers.registry_https.tls=true
+        - traefik.http.routers.registry_https.service=registry
+
+  # https://github.com/jc21/docker-registry-ui
+  # https://github.com/parabuzzle/craneoperator
+  # https://github.com/Quiq/docker-registry-ui
+  registry-ui:
+    image: quiq/docker-registry-ui:0.9.2
+    ports:
+      - "8000"
+    volumes:
+      - ui-data:/opt/data
+      - ./config/registry_ui.yml:/opt/config.yml:ro
+    depends_on:
+      - registry
+    networks:
+      - docker_registry
+      - proxy  
+    labels:  
+        # https://docs.traefik.io/reference/dynamic-configuration/docker/
+        # https://docs.traefik.io/routing/providers/docker/
+        - traefik.enable=true # expose this container through traefik
+        - traefik.http.services.registryUI.loadbalancer.server.port=8000
+
+        # http route, redirect to https
+        # - traefik.http.routers.registryUI_http.entrypoints=http
+        # - traefik.http.routers.registryUI_http.rule=Host(`registry-ui.dev.mz`)
+        # - traefik.http.routers.registryUI_http.middlewares=force-https@file
+
+        # https route
+        - traefik.http.routers.registryUI_https.entrypoints=https
+        - traefik.http.routers.registryUI_https.rule=Host(`registry-ui.dev.mz`)
+        - traefik.http.routers.registryUI_https.tls=true
+        - traefik.http.routers.registryUI_https.service=registryUI

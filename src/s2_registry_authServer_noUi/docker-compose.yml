@@ -1,4 +1,4 @@
-version: '3.5'
+version: '3.7'
 
 networks:
     docker_registry:
@@ -35,9 +35,10 @@ services:
       - docker_registry
     environment:
       - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+
       - REGISTRY_AUTH=token
-      - REGISTRY_AUTH_TOKEN_REALM=https://registry.miczone.asia/authorization/auth # the authentication server URI
+      - REGISTRY_AUTH_TOKEN_REALM=https://$DOMAIN/authorization/auth # the authentication server URI
       - REGISTRY_AUTH_TOKEN_SERVICE="Docker Registr"
       - REGISTRY_AUTH_TOKEN_ISSUER="Docker Registry Auth Server" # Should be the same as token.issuer from authenticated-registry/config/auth_config.yml
       - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/certs/docker_auth.pem
-  
