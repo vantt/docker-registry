@@ -120,9 +120,11 @@ docker run --rm anoxis/registry-cli -r https://registry.miczone.asia -l username
 
 ```
 docker run --rm anoxis/registry-cli -r https://registry.miczone.asia -l username:password --delete --num 10
+
 ```
 
 ### delete a specific tags
+
 ```
 docker run --rm anoxis/registry-cli -r https://registry.miczone.asia -l username:password -i devops/nginx --delete --tags-like "specific_tags"
 ```
@@ -137,4 +139,5 @@ docker run --rm anoxis/registry-cli -r https://registry.miczone.asia -l username
 
 ```
 --delete --tags-like "snapshot-" --keep-tags "stable" "latest"
+
 ```
