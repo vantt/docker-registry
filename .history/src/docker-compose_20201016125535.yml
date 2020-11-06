@@ -3,20 +3,20 @@ version: '3.7'
 
 networks: 
   docker_registry: {}
-  # proxy:
-  #       external: true
-  #       name: https-proxy
+  proxy:
+        external: true
+        name: https-proxy
 
 volumes:
     registry-data: # the real name will be <parent-folder-name>_registry-data (dash '-' int he folder name will be removed). eg. authenticatedregistry_registry-data
-      external: true
+      driver: local
 
 services:
     registry:
         image: ${REGISTRY_IMAGE}
-        #container_name: registry
-        ports:
-           - 5000:5000
+        container_name: registry
+        # ports:
+        #   - 5000:5000
         volumes:
           - ./config/htpasswd:/htpasswd:ro
           - ./certs:/certs
@@ -24,10 +24,8 @@ services:
         restart: always
         networks:
           - docker_registry
-          #- proxy
-        deploy:
-          mode: global
-        
+          - proxy
+
         environment:
           - REGISTRY_STORAGE_DELETE_ENABLED=true
           

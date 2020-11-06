@@ -9,6 +9,7 @@ networks:
 
 volumes:
     registry-data: # the real name will be <parent-folder-name>_registry-data (dash '-' int he folder name will be removed). eg. authenticatedregistry_registry-data
+      name: registry-data
       external: true
 
 services:
@@ -21,7 +22,7 @@ services:
           - ./config/htpasswd:/htpasswd:ro
           - ./certs:/certs
           - registry-data:/var/lib/registry
-        restart: always
+        restart: on-failure
         networks:
           - docker_registry
           #- proxy

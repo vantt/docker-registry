@@ -21,7 +21,7 @@ services:
           - ./config/htpasswd:/htpasswd:ro
           - ./certs:/certs
           - registry-data:/var/lib/registry
-        restart: always
+        restart: on-failure
         networks:
           - docker_registry
           #- proxy

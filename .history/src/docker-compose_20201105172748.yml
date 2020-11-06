@@ -9,12 +9,13 @@ networks:
 
 volumes:
     registry-data: # the real name will be <parent-folder-name>_registry-data (dash '-' int he folder name will be removed). eg. authenticatedregistry_registry-data
+      name: registry-data
       external: true
 
 services:
     registry:
         image: ${REGISTRY_IMAGE}
-        #container_name: registry
+        container_name: registry
         ports:
            - 5000:5000
         volumes:
@@ -25,9 +26,7 @@ services:
         networks:
           - docker_registry
           #- proxy
-        deploy:
-          mode: global
-        
+
         environment:
           - REGISTRY_STORAGE_DELETE_ENABLED=true
           
