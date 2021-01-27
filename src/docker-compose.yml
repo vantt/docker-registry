@@ -1,4 +1,3 @@
-
 version: '3.7'
 
 networks: 
@@ -12,6 +11,17 @@ volumes:
       external: true
 
 services:
+    gitlab_runner:
+        image: gitlab/gitlab-runner
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - ./gitlab-runner/gitlab_runner_config.toml:/etc/gitlab-runner/config.toml
+        restart: always
+        deploy:
+          mode: global
+        networks:
+          - docker_registry
+            
     registry:
         image: ${REGISTRY_IMAGE}
         #container_name: registry
